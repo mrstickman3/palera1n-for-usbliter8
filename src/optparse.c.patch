@@ -1,0 +1,28 @@
+--- a/src/optparse.c
++++ b/src/optparse.c
+@@ -25,6 +25,7 @@ uint64_t* palerain_flags_p = &palerain_flags;
+ 	static struct option longopts[] = {
+ 		{"setup-partial-fakefs", no_argument, NULL, 'B'},
+ 		{"setup-fakefs", no_argument, NULL, 'c'},
++		{"pwned-dfu", no_argument, NULL, palerain_option_case_pwned_dfu},
+ 		{"clean-fakefs", no_argument, NULL, 'C'},
+ 		{"dfuhelper", no_argument, NULL, 'D'},
+ 		{"help", no_argument, NULL, 'h'},
+@@ -80,6 +81,7 @@ static int usage(int e, char* prog_name)
+ 		"\t--version\t\t\t\tPrint version\n"
+ 		"\t--force-revert\t\t\t\tRemove jailbreak\n"
+ 		"\t--version\t\t\t\tPrint version\n"
++		"\t--pwned-dfu\t\t\t\tUse pwned DFU mode (skip exploit)\n"
+ #ifdef DEV_BUILD
+ 		"\t-1, --test1\t\t\t\tSet palerain_option_test1\n"
+ 		"\t-2, --test2\t\t\t\tSet palerain_option_test2\n"
+@@ -325,6 +327,9 @@ int optparse(int argc, char* argv[]) {
+ 		case palerain_option_case_version:
+ 			palerain_flags |= palerain_option_palerain_version;
+ 			break;
++		case palerain_option_case_pwned_dfu:
++			palerain_flags |= palerain_option_pwned_dfu;
++			break;
+ 		case palerain_option_case_libcheckra1nhelper_path:
+ 			gOverrideLibcheckra1nHelper = calloc(1, strlen(optarg) + 1);
+ 			if (!gOverrideLibcheckra1nHelper) {
