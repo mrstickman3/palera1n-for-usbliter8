@@ -28,7 +28,11 @@ fi
 echo "[+] Installing dependencies..."
 
 brew update
-brew install libirecovery pkg-config
+brew install \
+  libirecovery \
+  libusbmuxd \
+  libimobiledevice \
+  pkg-config
 
 echo "[+] Building palelitera1n..."
 

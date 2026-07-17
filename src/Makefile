@@ -3,6 +3,16 @@ all: palera1n
 OBJDIR = obj
 GENDIR = gen
 RESOURCES_DIR = resources
+LIBS += -limobiledevice-1.0
+LIBS += -lirecovery-1.0
+LIBS += -lusbmuxd-2.0
+LIBS += -limobiledevice-glue-1.0
+LIBS += -lplist-2.0
+LIBS += -lmbedtls
+LIBS += -lmbedcrypto
+LIBS += -lmbedx509
+LIBS += -lreadline
+LIBS += -pthread -lm
 
 CC_FOR_BUILD = cc
 CFLAGS_FOR_BUILD = -Wall -Wextra -std=c99 -pedantic-errors -O2
@@ -147,7 +157,7 @@ $(OBJDIR)/pongo_helper.c.o: pongo_helper.c $(wildcard ../include/*.h) $(RESOURCE
 	$(CC) -c -o $@ $(CFLAGS) -DRAMDISK_UNCOMPRESSED_SIZE="\"$$(wc -c < $(RESOURCES_DIR)/ramdisk.dmg | tr -d ' ')\"" -DKPF_UNCOMPRESSED_SIZE="\"$$(wc -c < $(RESOURCES_DIR)/checkra1n-kpf-pongo | tr -d ' ')\"" $<
 
 $(OBJDIR)/%.c.o: $(GENDIR)/gen-%.c $(wildcard ../include/*.h)
-	$(CC) $(CFLAGS) -c -o $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(OBJDIR)/%.c.o: %.c $(wildcard ../include/*.h)
 	$(CC) $(CFLAGS) -c -o $@ $<

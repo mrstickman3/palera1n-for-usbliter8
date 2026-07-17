@@ -25,7 +25,8 @@
 #include <usbmuxd.h>
 
 #include <ANSI-color-codes.h>
-#include <palerain.h>\n#include <pwned_dfu.h>
+#include <palerain.h>
+#include <pwned_dfu.h>
 
 #define FORMAT_KEY_VALUE 1
 #define FORMAT_XML 2
@@ -235,7 +236,7 @@ static void* connected_dfu_mode(struct irecv_device_info* info) {
 	/* Check for pwned DFU mode if requested. This only confirms state;
 	 * the normal Pongo pipeline remains responsible for boot handling. */
 	if (palerain_flags & palerain_option_pwned_dfu) {
-		irecv_device_t device = NULL;
+		irecv_client_t device = NULL;
 		LOG(LOG_INFO, "Checking for pwned DFU mode...");
 		if (irecv_open_with_ecid(&device, info->ecid) == IRECV_E_SUCCESS) {
 			if (detect_pwned_dfu(device)) {

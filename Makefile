@@ -3,12 +3,21 @@ DEP = $(SRC)/dep_root
 STRIP = strip
 CC ?= cc
 CFLAGS += -isystem $(DEP)/include -I$(SRC)/include -I$(SRC) -D_XOPEN_SOURCE=500
-CFLAGS += -Wall -Wextra -Wno-unused-parameter -DPALERAIN_VERSION=\"2.1\" -DHAVE_LIBIMOBILEDEVICE
+CFLAGS += -Wall -Wextra -Wno-unused-parameter -DHAVE_LIBIMOBILEDEVICE
 CFLAGS += -Wno-unused-variable -I$(SRC)/src -std=c99 -pedantic-errors -D_C99_SOURCE -D_POSIX_C_SOURCE=200112L
 CFLAGS += -I$(shell brew --prefix)/include
+CFLAGS += -Wno-strict-prototypes
 LDFLAGS += -L$(shell brew --prefix)/lib
-LIBS += $(DEP)/lib/libimobiledevice-1.0.a $(DEP)/lib/libirecovery-1.0.a $(DEP)/lib/libusbmuxd-2.0.a
-LIBS += $(DEP)/lib/libimobiledevice-glue-1.0.a $(DEP)/lib/libplist-2.0.a -pthread -lm
+LIBS += -limobiledevice-1.0
+LIBS += -lirecovery-1.0
+LIBS += -lusbmuxd-2.0
+LIBS += -limobiledevice-glue-1.0
+LIBS += -lplist-2.0
+LIBS += -lmbedtls
+LIBS += -lmbedcrypto
+LIBS += -lmbedx509
+LIBS += -lreadline
+LIBS += -pthread -lm
 ifeq ($(TARGET_OS),)
 TARGET_OS = $(shell uname -s)
 UNAME = $(TARGET_OS)
@@ -26,7 +35,7 @@ else
 CFLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += -Wl,--gc-sections
 endif
-LIBS += $(DEP)/lib/libmbedtls.a $(DEP)/lib/libmbedcrypto.a $(DEP)/lib/libmbedx509.a $(DEP)/lib/libreadline.a
+LIBS += -lmbedtls -lmbedcrypto -lmbedx509 -lreadline
 
 ifeq ($(TUI),1)
 ifeq ($(TARGET_OS),Linux)
