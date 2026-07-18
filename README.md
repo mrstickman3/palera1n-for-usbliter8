@@ -59,7 +59,9 @@ Environmental variables:
 	TMPDIR		temporary diretory (path the built-in checkra1n will be extracted to)
 ```
 
+## Using it
 
+Type ''' make '''
 
 ## Credits
 
