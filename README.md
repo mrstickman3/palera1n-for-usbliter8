@@ -59,7 +59,15 @@ Environmental variables:
 	TMPDIR		temporary diretory (path the built-in checkra1n will be extracted to)
 ```
 
+## Using it
 
+run this in terminal
+its not done so you WILL get an error, just wait until i finish.
+```
+Git clone https://github.com/mrstickman3/palera1n-for-usbliter8
+cd palera1n-for-usbliter8
+make
+```
 ## Credits
 
 Paradigm Shift - usbliter8
