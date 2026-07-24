@@ -104,3 +104,12 @@ distclean: clean
 
 .PHONY: all palera1n clean docs distclean
 
+PREFIX ?= /usr/local/bin
+
+install: palera1n
+	install -m755 src/palera1n $(PREFIX)/palera1n-for-usbliter8
+	ln -sf $(PREFIX)/palera1n-for-usbliter8 $(PREFIX)/palera1n
+
+uninstall:
+	rm -f $(PREFIX)/palera1n
+	rm -f $(PREFIX)/palera1n-for-usbliter8

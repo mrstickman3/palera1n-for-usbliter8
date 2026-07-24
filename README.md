@@ -1,13 +1,13 @@
 # palera1n for usbliter8
 
-btw like 90% of this was made with github copilot
+btw like 90% of this was made with AI
 
 
 A jailbreak for A12-A13
 
 
-btw literally NONE of this is tested, if it works or doesnt work you should add an issue and if you have a fix, then a pull request
- 
+btw the only part that's tested is if it runs, idk if it even jailbreaks your device. hopefully it does tho
+
 
 ## Device Support
 
@@ -60,6 +60,22 @@ Environmental variables:
 ```
 
 ## Using it
+<<<<<<< HEAD
+=======
+
+type this into your terminal:
+```
+git clone https://github.com/mrstickman3/palera1n-for-usbliter8
+cd palera1n-for-usbliter8
+make
+sudo make install
+```
+that last part of the command will make your terminal ask for your password, from now on, just type
+```
+palera1n
+```
+and it will run palera1n
+>>>>>>> 58e2485 (Add usbliter8 support and build improvements)
 
 run this in terminal
 its not done so you WILL get an error, just wait until i finish.
@@ -70,7 +86,7 @@ make
 ```
 ## Credits
 
-Paradigm Shift - usbliter8
+Paradigm Shift - Usbliter8
 
 Palera1n - Palera1n
 

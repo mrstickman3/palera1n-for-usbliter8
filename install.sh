@@ -39,15 +39,14 @@ echo "[+] Building palelitera1n..."
 make clean || true
 make
 
-if [ ! -f "./palera1n" ]; then
-    echo "Error: Build completed but palera1n binary was not found."
+if [ ! -f "./src/palera1n" ]; then
+    echo "Error: Build completed but ./src/palera1n was not found."
     exit 1
 fi
 
-echo "[+] Installing palera1n command..."
+echo "[+] Installing palera1n..."
 
-sudo cp ./palera1n /usr/local/bin/palera1n
-sudo chmod +x /usr/local/bin/palera1n
+sudo install -m 755 ./src/palera1n /usr/local/bin/palera1n
 
 echo ""
 echo "================================="
