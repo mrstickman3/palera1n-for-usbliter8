@@ -74,7 +74,6 @@ that last part of the command will make your terminal ask for your password, fro
 palera1n
 ```
 and it will run palera1n
-btw, i think an error happens when you run it and everytime i test it, it works and when i double check using github it doesnt work. if anyone can fix that, then please do.
 ## Credits
 
 Paradigm Shift - Usbliter8
