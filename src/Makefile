@@ -2,6 +2,14 @@ all: palera1n
 
 OBJDIR = obj
 GENDIR = gen
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(OBJDIR)/gen:
+	mkdir -p $(OBJDIR)/gen
+
+$(GENDIR):
+	mkdir -p $(GENDIR)
 RESOURCES_DIR = resources
 LIBS += -limobiledevice-1.0
 LIBS += -lirecovery-1.0
@@ -156,10 +164,10 @@ $(GENDIR)/gen-%.c: $(RESOURCES_DIR)/%
 $(OBJDIR)/pongo_helper.c.o: pongo_helper.c $(wildcard ../include/*.h) $(RESOURCES_DIR)/ramdisk.dmg $(RESOURCES_DIR)/checkra1n-kpf-pongo
 	$(CC) -c -o $@ $(CFLAGS) -DRAMDISK_UNCOMPRESSED_SIZE="\"$$(wc -c < $(RESOURCES_DIR)/ramdisk.dmg | tr -d ' ')\"" -DKPF_UNCOMPRESSED_SIZE="\"$$(wc -c < $(RESOURCES_DIR)/checkra1n-kpf-pongo | tr -d ' ')\"" $<
 
-$(OBJDIR)/%.c.o: $(GENDIR)/gen-%.c $(wildcard ../include/*.h)
+$(OBJDIR)/%.c.o: $(GENDIR)/gen-%.c $(wildcard ../include/*.h) | $(OBJDIR) $(OBJDIR)/gen $(GENDIR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(OBJDIR)/%.c.o: %.c $(wildcard ../include/*.h)
+$(OBJDIR)/%.c.o: %.c $(wildcard ../include/*.h) | $(OBJDIR) $(OBJDIR)/gen $(GENDIR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 palera1n: $(OBJS)
