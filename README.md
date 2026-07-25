@@ -60,8 +60,7 @@ Environmental variables:
 ```
 
 ## Using it
-<<<<<<< HEAD
-=======
+
 
 type this into your terminal:
 ```
@@ -75,15 +74,7 @@ that last part of the command will make your terminal ask for your password, fro
 palera1n
 ```
 and it will run palera1n
->>>>>>> 58e2485 (Add usbliter8 support and build improvements)
 
-run this in terminal
-its not done so you WILL get an error, just wait until i finish.
-```
-Git clone https://github.com/mrstickman3/palera1n-for-usbliter8
-cd palera1n-for-usbliter8
-make
-```
 ## Credits
 
 Paradigm Shift - Usbliter8
