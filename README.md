@@ -69,11 +69,12 @@ cd palera1n-for-usbliter8
 make
 sudo make install
 ```
-that last part of the command will make your terminal ask for your password, from now on, just type
+that last part of the command will make your terminal ask for your password. from now on, just type
 ```
 palera1n
 ```
 and it will run palera1n
+
 ## Credits
 
 Paradigm Shift - Usbliter8
