@@ -68,12 +68,14 @@ static int connected_normal_mode(const usbmuxd_device_info_t *usbmuxd_device) {
 		LOG(LOG_ERROR, "Unable to get device information");
 		return 0;
 	}
-	if (strcmp(dev.CPUArchitecture, "arm64")) {
-		devinfo_free(&dev);
-		LOG(LOG_WARNING, "Ignoring non-arm64 device...");
-		LOG(LOG_WARNING, "palera1n doesn't and never will work on A12+ (arm64e)");
-		return -1;
-	}
+if (strcmp(dev.CPUArchitecture, "arm64") &&
+    strcmp(dev.CPUArchitecture, "arm64e")) {
+    devinfo_free(&dev);
+    LOG(LOG_WARNING,
+        "Unsupported architecture: %s",
+        dev.CPUArchitecture);
+    return -1;
+}
 
 	if ((palerain_flags & palerain_option_device_info)) {
 		printf("Mode: normal\n");

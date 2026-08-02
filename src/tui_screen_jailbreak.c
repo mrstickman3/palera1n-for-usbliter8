@@ -56,7 +56,7 @@ static void *tui_jailbreak_thread(void *arg) {
     tui_jailbreak_status = "Running exploit";
     tui_jailbreak_status_changed();
 
-    if (exec_checkra1n() != 0) {
+    if (run_device_path(event->device_info); != 0) {
         tui_jailbreak_status = "ERROR: Failed to run exploit";
         tui_jailbreak_status_changed();
         pthread_exit(NULL);
