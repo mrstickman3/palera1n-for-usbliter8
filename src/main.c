@@ -1,3 +1,5 @@
+#include <simulator.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -112,6 +114,8 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	pthread_mutex_init(&ecid_dfu_wait_mutex, NULL);
 	if ((ret = build_checks())) return ret;
 	if ((ret = optparse(argc, argv))) goto cleanup;
+	LOG(LOG_INFO, "DEBUG: simulator=%d flags=0x%llx", simulator_is_enabled(), (unsigned long long)palerain_flags);
+	LOG(LOG_INFO, "DEBUG simulator=%d", simulator_is_enabled());
 	if (!(palerain_flags & palerain_option_device_info) && (palerain_flags & palerain_option_palerain_version)) goto normal_exit;
 #ifdef TUI
 	if ((palerain_flags & palerain_option_tui) || (isatty(STDIN_FILENO) && isatty(STDOUT_FILENO) && !(palerain_flags & palerain_option_cli))) {
@@ -134,15 +138,15 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	}
 #endif
 
-	if (!(palerain_flags & palerain_option_device_info))
-		LOG(LOG_INFO, "Waiting for devices");
+	if (!(palerain_flags & palerain_option_simulator_pwned_dfu) && !(palerain_flags & palerain_option_device_info))
+		if (!(palerain_flags & palerain_option_simulator_pwned_dfu)) LOG(LOG_INFO, "Waiting for devices");
 
 	if (getenv("USBMUXD_SOCKET_ADDRESS") == NULL && access("/var/run/usbmuxd", F_OK) != 0) 
 		LOG(LOG_WARNING, "/var/run/usbmuxd not found, normal mode device detection will not work.");
 	
-	pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
-	pthread_create(&dfuhelper_thread, NULL, dfuhelper, NULL);
-	pthread_join(dfuhelper_thread, NULL);
+	if (simulator_is_enabled()) pthread_create(&pongo_thread, NULL, simulator_pongo_helper, NULL); else pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
+	if (!simulator_is_enabled()) pthread_create(&dfuhelper_thread, NULL, dfuhelper, NULL);
+	if (!simulator_is_enabled()) pthread_join(dfuhelper_thread, NULL);
 	set_spin(0);
 	if ((palerain_flags & (palerain_option_dfuhelper_only | 
 							  palerain_option_reboot_device  | 
@@ -158,7 +162,7 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	/* pwned DFU mode is only allowed to skip the exploit trigger after
 	 * dfuhelper confirms the device state. */
 	if (!(palerain_flags & palerain_option_pwned_dfu)) {
-		if (exec_checkra1n()) goto cleanup;
+		if (simulator_is_enabled()) { LOG(LOG_INFO, "Simulator: checkm8 exploit complete"); sleep(2); } else if (exec_checkra1n()) goto cleanup;
 	} else {
 		LOG(LOG_INFO, "Confirmed pwned DFU state - skipping exploit trigger");
 	}
@@ -167,7 +171,7 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 		goto normal_exit;
 	set_spin(1);
 	sleep(2);
-	pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
+	if (simulator_is_enabled()) pthread_create(&pongo_thread, NULL, simulator_pongo_helper, NULL); else pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
 	pthread_join(pongo_thread, NULL);
 	while (get_spin())
 	{

@@ -1,3 +1,5 @@
+#include <simulator.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -40,6 +42,8 @@ static struct option longopts[] = {
 	{"no-colors", no_argument, NULL, 'S'},
 	{"safe-mode", no_argument, NULL, 's'},
 	{"telnetd", no_argument, NULL, 'T'},
+	{"simulator", required_argument, 0, 'm'},
+
 	{"version", no_argument, NULL, palerain_option_case_version},
 	{"override-libcheckra1nhelper", required_argument, NULL, palerain_option_case_libcheckra1nhelper_path},
 	{"override-pongo", required_argument, NULL, 'k'},
@@ -137,7 +141,7 @@ int optparse(int argc, char* argv[]) {
 	int opt;
 	int index;
 	while ((opt = getopt_long(argc, argv,
-	"DEhpvVlLdsSTtRnPIe:o:r:K:k:i:"
+	"DEhpvVlLdsSTtRnPIe:o:r:K:k:i:m:"
 #ifdef DEV_BUILD
 	"12"
 #endif
@@ -294,6 +298,11 @@ int optparse(int argc, char* argv[]) {
 			ext_checkra1n = calloc(1, strlen(optarg) + 1);
 			snprintf(ext_checkra1n, strlen(optarg) + 1, "%s", optarg);
 			break;
+		case 'm':
+			palerain_flags |= palerain_option_simulator_pwned_dfu;
+			simulator_init(strcmp(optarg, "a13") == 0 ? SIM_DEVICE_A13 : SIM_DEVICE_A12, SIM_MODE_PWNED_DFU);
+			break;
+
 		case 'R':
 			palerain_flags |= palerain_option_reboot_device;
 			break;

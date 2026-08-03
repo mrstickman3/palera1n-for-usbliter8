@@ -1,0 +1,235 @@
+diff --git a/include/paleinfo.h b/include/paleinfo.h
+index 43dda1e..18b633e 100644
+--- a/include/paleinfo.h
++++ b/include/paleinfo.h
+@@ -9,6 +9,7 @@
+ #ifndef PALEINFO_H
+ #define PALEINFO_H
+ 
++
+ #include <stdint.h>
+ 
+ #define PALEINFO_VERSION 2U
+@@ -53,6 +54,7 @@ typedef uint64_t palerain_option_t;
+ #define palerain_option_flower_chain         (UINT64_C(1) << 61) /* Flower chain */
+ #define palerain_option_test1                (UINT64_C(1) << 62) /* Developer test option 1 */
+ #define palerain_option_test2                (UINT64_C(1) << 63) /* Developer test option 2 */
++#define palerain_option_simulator_pwned_dfu (UINT64_C(1) << 34)  /* Skip exploit, use pwned DFU mode */
+ 
+ #define PALEINFO_MAGIC 'PLSH'
+ 
+diff --git a/include/palerain.h b/include/palerain.h
+index baf708b..cf92be0 100644
+--- a/include/palerain.h
++++ b/include/palerain.h
+@@ -153,6 +153,8 @@ typedef unsigned char niarelap_file_t[];
+ 
+ extern unsigned int verbose;
+ 
++extern char *simulator_chip;
++
+ extern char* pongo_path;
+ #ifdef TUI
+ extern bool tui_started;
+diff --git a/src/device_support.c b/src/device_support.c
+index 3abccfe..a200317 100644
+--- a/src/device_support.c
++++ b/src/device_support.c
+@@ -1,10 +1,14 @@
+ #include <stddef.h>
++#include <simulator.h>
+ #include <palerain.h>
+ #include "device_support.h"
+ 
+ bool is_a12_a13(struct irecv_device_info *info)
+ {
+-    if (info == NULL)
++    if (simulator_is_enabled()) {
++    return true;
++}
++if (info == NULL)
+         return false;
+ 
+     switch (info->cpid) {
+diff --git a/src/main.c b/src/main.c
+index 8a8b1eb..20c39ba 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1,3 +1,4 @@
++#include <simulator.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdint.h>
+@@ -79,7 +80,7 @@ static int build_checks(void) {
+ 	if (boyermoore_horspool_memmem(&checkra1n[0], checkra1n_len, (const unsigned char *)"[ra1npoc15-part] thanks to", strlen("[ra1npoc15-part] thanks to")) != NULL) {
+ 		palerain_flags |= palerain_option_checkrain_is_clone;
+ 	}
+-#endif
++
+ 	return 0;
+ }
+ 
+@@ -110,15 +111,48 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
+ 	pthread_mutex_init(&spin_mutex, NULL);
+ 	pthread_mutex_init(&found_pongo_mutex, NULL);
+ 	pthread_mutex_init(&ecid_dfu_wait_mutex, NULL);
++
+ 	if ((ret = build_checks())) return ret;
++
+ 	if ((ret = optparse(argc, argv))) goto cleanup;
+-	if (!(palerain_flags & palerain_option_device_info) && (palerain_flags & palerain_option_palerain_version)) goto normal_exit;
+-#ifdef TUI
+-	if ((palerain_flags & palerain_option_tui) || (isatty(STDIN_FILENO) && isatty(STDOUT_FILENO) && !(palerain_flags & palerain_option_cli))) {
+-		ret = tui();
+-		if (ret) goto cleanup;
+-		else goto normal_exit;
++if (simulator_chip != NULL) {
++
++    LOG(LOG_INFO, "Starting simulator for %s", simulator_chip);
++
++    if (!strcmp(simulator_chip, "a12")) {
++
++        simulator_init(
++            SIM_DEVICE_A12,
++            SIM_MODE_PWNED_DFU
++        );
++
++    } else if (!strcmp(simulator_chip, "a13")) {
++
++        simulator_init(
++            SIM_DEVICE_A13,
++            SIM_MODE_PWNED_DFU
++        );
++
++    } else {
++
++        LOG(LOG_FATAL,
++            "Unknown simulator chip: %s",
++            simulator_chip);
++
++        goto cleanup;
++    }
++}
++
++	if (getenv("PALERA1N_SIM")) {
++		LOG(LOG_INFO, "Starting simulator");
++
++		simulator_init(
++			SIM_DEVICE_A13,
++			SIM_MODE_PWNED_DFU
++		);
+ 	}
++
++	if (!(palerain_flags & palerain_option_device_info) && (palerain_flags & palerain_option_palerain_version)) goto normal_exit;
+ #endif
+ #ifdef USE_LIBUSB
+ 	{
+@@ -134,15 +168,30 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
+ 	}
+ #endif
+ 
+-	if (!(palerain_flags & palerain_option_device_info))
+-		LOG(LOG_INFO, "Waiting for devices");
++if (!simulator_is_enabled()) {
+ 
+-	if (getenv("USBMUXD_SOCKET_ADDRESS") == NULL && access("/var/run/usbmuxd", F_OK) != 0) 
+-		LOG(LOG_WARNING, "/var/run/usbmuxd not found, normal mode device detection will not work.");
+-	
+-	pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
+-	pthread_create(&dfuhelper_thread, NULL, dfuhelper, NULL);
+-	pthread_join(dfuhelper_thread, NULL);
++    if (!(palerain_flags & palerain_option_device_info))
++        LOG(LOG_INFO, "Waiting for devices");
++
++    if (getenv("USBMUXD_SOCKET_ADDRESS") == NULL &&
++        access("/var/run/usbmuxd", F_OK) != 0)
++        LOG(LOG_WARNING,
++            "/var/run/usbmuxd not found, normal mode device detection will not work.");
++
++    pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
++    pthread_create(&dfuhelper_thread, NULL, dfuhelper, NULL);
++    pthread_join(dfuhelper_thread, NULL);
++
++} else {
++
++    LOG(LOG_INFO, "Simulator: starting in pwned DFU");
++
++palerain_flags |= palerain_option_simulator_pwned_dfu;
++
++set_found_pongo(true);
++
++    set_found_pongo(true);
++}
+ 	set_spin(0);
+ 	if ((palerain_flags & (palerain_option_dfuhelper_only | 
+ 							  palerain_option_reboot_device  | 
+@@ -157,7 +206,7 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
+ 	
+ 	/* pwned DFU mode is only allowed to skip the exploit trigger after
+ 	 * dfuhelper confirms the device state. */
+-	if (!(palerain_flags & palerain_option_pwned_dfu)) {
++	if (!(palerain_flags & (palerain_option_pwned_dfu | palerain_option_simulator_pwned_dfu))) {
+ 		if (exec_checkra1n()) goto cleanup;
+ 	} else {
+ 		LOG(LOG_INFO, "Confirmed pwned DFU state - skipping exploit trigger");
+diff --git a/src/optparse.c b/src/optparse.c
+index 7f47db0..2e5263f 100644
+--- a/src/optparse.c
++++ b/src/optparse.c
+@@ -21,6 +21,7 @@
+ 
+ uint64_t* palerain_flags_p = &palerain_flags;
+ char* gOverrideLibcheckra1nHelper = NULL;
++char* simulator_chip = NULL;
+ 
+ static struct option longopts[] = {
+ 	{"setup-partial-fakefs", no_argument, NULL, 'B'},
+@@ -51,6 +52,8 @@ static struct option longopts[] = {
+ 	{"exit-recovery", no_argument, NULL, 'n'},
+ 	{"enter-recovery", no_argument, NULL, 'E'},
+ 	{"device-info", no_argument, NULL, 'I'},
++	{"simulator", required_argument, NULL, 'm'},
++	{"sim-pwned-dfu", no_argument, NULL, 'Z'},
+ #ifdef DEV_BUILD
+ 	{"test1", no_argument, NULL, '1'},
+ 	{"test2", no_argument, NULL, '2'},
+@@ -107,6 +110,7 @@ static int usage(int e, char* prog_name)
+ 			"\t-L, --jbinit-log-to-file\t\tMake jbinit log to /cores/jbinit.log (can be read from sandbox while jailbroken)\n"
+ 			"\t-n, --exit-recovery\t\t\tExit recovery mode\n"
+ 			"\t-I, --device-info\t\t\tPrint info about the connected device\n"
++			"\t--simulator <chip>\t\tRun simulated device (a12/a13)\n"
+ 			"\t-o, --override-overlay <file>\t\tOverride overlay\n"
+ 			"\t-p, --pongo-shell\t\t\tBoots to PongoOS shell\n"
+ 			"\t-P, --pongo-full\t\t\tBoots to a PongoOS shell with default images already uploaded\n"
+@@ -137,7 +141,7 @@ int optparse(int argc, char* argv[]) {
+ 	int opt;
+ 	int index;
+ 	while ((opt = getopt_long(argc, argv,
+-	"DEhpvVlLdsSTtRnPIe:o:r:K:k:i:"
++	"DEhpvVlLdsSTtRnPIZe:o:r:K:k:i:m:"
+ #ifdef DEV_BUILD
+ 	"12"
+ #endif
+@@ -147,6 +151,22 @@ int optparse(int argc, char* argv[]) {
+ 	,longopts, NULL)) != -1)
+ 	{
+ 		switch (opt) {
++case 'm':
++    simulator_chip = calloc(1, strlen(optarg) + 1);
++
++    if (!simulator_chip) {
++        LOG(LOG_FATAL, "memory allocation failed");
++        return -1;
++    }
++
++    strcpy(simulator_chip, optarg);
++
++    palerain_flags |= palerain_option_cli;
++
++    break;
++case 'Z':
++    palerain_flags |= palerain_option_simulator_pwned_dfu;
++    break;
+ #ifdef ROOTFUL
+ 		case 'B':
+ 			palerain_flags |= palerain_option_setup_partial_root;
