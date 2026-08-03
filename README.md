@@ -44,6 +44,7 @@ Usage: palera1n [-DEhpvVdsSLRnPI] [-e boot arguments] [-k Pongo image] [-o overl
 	-L, --jbinit-log-to-file		Make jbinit log to /cores/jbinit.log (can be read from sandbox while jailbroken)
 	-n, --exit-recovery			Exit recovery mode
 	-I, --device-info			Print info about the connected device
+	--simulator <chip>			Simulate having a A12/A13 device.
 	-o, --override-overlay <file>		Override overlay
 	-p, --pongo-shell			Boots to PongoOS shell
 	-P, --pongo-full			Boots to a PongoOS shell with default images already uploaded
