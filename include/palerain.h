@@ -153,6 +153,8 @@ typedef unsigned char niarelap_file_t[];
 
 extern unsigned int verbose;
 
+extern char *simulator_chip;
+
 extern char* pongo_path;
 #ifdef TUI
 extern bool tui_started;
