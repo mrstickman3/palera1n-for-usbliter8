@@ -144,7 +144,8 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	if (getenv("USBMUXD_SOCKET_ADDRESS") == NULL && access("/var/run/usbmuxd", F_OK) != 0) 
 		LOG(LOG_WARNING, "/var/run/usbmuxd not found, normal mode device detection will not work.");
 	
-	if (simulator_is_enabled()) pthread_create(&pongo_thread, NULL, simulator_pongo_helper, NULL); else pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
+	if (simulator_is_enabled()) { LOG(LOG_WARNING, "A12/A13 devices require usbliter8 first, then run palera1n again while the device is in pwned DFU."); goto cleanup; } else pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
+	pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
 	if (!simulator_is_enabled()) pthread_create(&dfuhelper_thread, NULL, dfuhelper, NULL);
 	if (!simulator_is_enabled()) pthread_join(dfuhelper_thread, NULL);
 	set_spin(0);

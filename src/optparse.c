@@ -300,7 +300,7 @@ int optparse(int argc, char* argv[]) {
 			break;
 		case 'm':
 			palerain_flags |= palerain_option_simulator_pwned_dfu;
-			simulator_init(strcmp(optarg, "a13") == 0 ? SIM_DEVICE_A13 : SIM_DEVICE_A12, SIM_MODE_PWNED_DFU);
+			simulator_init(strcmp(optarg,"a13")==0?SIM_DEVICE_A13:strcmp(optarg,"a12")==0?SIM_DEVICE_A12:strcmp(optarg,"a11")==0?11:strcmp(optarg,"a10")==0?10:strcmp(optarg,"a9")==0?9:strcmp(optarg,"a8")==0?8:SIM_DEVICE_A12,SIM_MODE_PWNED_DFU);
 			break;
 
 		case 'R':

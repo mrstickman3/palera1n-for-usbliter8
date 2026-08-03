@@ -187,6 +187,7 @@ int p1_log(log_level_t loglevel, const char *fname, int lineno, const char *fxna
 /* devhelper helpers */
 void devinfo_free(devinfo_t *dev);
 bool cpid_is_arm64(unsigned int cpid);
+bool cpid_needs_usbliter8(unsigned int cpid);
 /* devhelper commands */
 int subscribe_cmd(usbmuxd_event_cb_t device_event_cb, irecv_device_event_cb_t irecv_event_cb);
 int unsubscribe_cmd(void);
