@@ -141,6 +141,8 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	if (!(palerain_flags & palerain_option_simulator_pwned_dfu) && !(palerain_flags & palerain_option_device_info))
 		if (!(palerain_flags & palerain_option_simulator_pwned_dfu)) LOG(LOG_INFO, "Waiting for devices");
 
+	if (dry_run) { LOG(LOG_INFO, "Dry run enabled - skipping device interaction"); LOG(LOG_INFO, "Simulator: %s", simulator_is_enabled() ? "enabled" : "disabled"); goto cleanup; }
+
 	if (getenv("USBMUXD_SOCKET_ADDRESS") == NULL && access("/var/run/usbmuxd", F_OK) != 0) 
 		LOG(LOG_WARNING, "/var/run/usbmuxd not found, normal mode device detection will not work.");
 	
@@ -163,7 +165,7 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	/* pwned DFU mode is only allowed to skip the exploit trigger after
 	 * dfuhelper confirms the device state. */
 	if (!(palerain_flags & palerain_option_pwned_dfu)) {
-		if (simulator_is_enabled()) { LOG(LOG_INFO, "Simulator: checkm8 exploit complete"); sleep(2); } else if (exec_checkra1n()) goto cleanup;
+		if (simulator_is_enabled()) { LOG(LOG_INFO, "Simulator: checkm8 exploit complete"); if (!simulator_fast) sleep(2); } else if (simulator_fast) { LOG(LOG_INFO, "Simulator: skipping checkra1n execution (fast mode)"); } else if (exec_checkra1n()) goto cleanup;
 	} else {
 		LOG(LOG_INFO, "Confirmed pwned DFU state - skipping exploit trigger");
 	}
@@ -171,12 +173,12 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	if ((palerain_flags & (palerain_option_pongo_exit | palerain_option_demote)))
 		goto normal_exit;
 	set_spin(1);
-	sleep(2);
+	if (!simulator_fast) sleep(2);
 	if (simulator_is_enabled()) pthread_create(&pongo_thread, NULL, simulator_pongo_helper, NULL); else pthread_create(&pongo_thread, NULL, pongo_helper, NULL);
 	pthread_join(pongo_thread, NULL);
 	while (get_spin())
 	{
-		sleep(1);
+		if (!simulator_fast) sleep(1);
 	}
 normal_exit:
 cleanup:

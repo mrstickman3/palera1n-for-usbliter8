@@ -23,6 +23,7 @@
 
 uint64_t* palerain_flags_p = &palerain_flags;
 char* gOverrideLibcheckra1nHelper = NULL;
+int dry_run = 0;
 
 static struct option longopts[] = {
 	{"setup-partial-fakefs", no_argument, NULL, 'B'},
@@ -43,6 +44,8 @@ static struct option longopts[] = {
 	{"safe-mode", no_argument, NULL, 's'},
 	{"telnetd", no_argument, NULL, 'T'},
 	{"simulator", required_argument, 0, 'm'},
+	{"dry-run", no_argument, 0, 'y'},
+	{"simulator-fast", required_argument, 0, 'M'},
 
 	{"version", no_argument, NULL, palerain_option_case_version},
 	{"override-libcheckra1nhelper", required_argument, NULL, palerain_option_case_libcheckra1nhelper_path},
@@ -141,7 +144,7 @@ int optparse(int argc, char* argv[]) {
 	int opt;
 	int index;
 	while ((opt = getopt_long(argc, argv,
-	"DEhpvVlLdsSTtRnPIe:o:r:K:k:i:m:"
+        "DEhpvVlLdsSTtRnPIe:o:r:K:k:i:m:y:"
 #ifdef DEV_BUILD
 	"12"
 #endif
@@ -298,6 +301,16 @@ int optparse(int argc, char* argv[]) {
 			ext_checkra1n = calloc(1, strlen(optarg) + 1);
 			snprintf(ext_checkra1n, strlen(optarg) + 1, "%s", optarg);
 			break;
+		case 'M':
+			palerain_flags |= palerain_option_simulator_pwned_dfu;
+			simulator_fast = 1;
+			simulator_init(strcmp(optarg,"a13")==0?SIM_DEVICE_A13:SIM_DEVICE_A12,SIM_MODE_PWNED_DFU);
+			break;
+
+		case 'y':
+			dry_run = 1;
+			break;
+
 		case 'm':
 			palerain_flags |= palerain_option_simulator_pwned_dfu;
 			simulator_init(strcmp(optarg,"a13")==0?SIM_DEVICE_A13:strcmp(optarg,"a12")==0?SIM_DEVICE_A12:strcmp(optarg,"a11")==0?11:strcmp(optarg,"a10")==0?10:strcmp(optarg,"a9")==0?9:strcmp(optarg,"a8")==0?8:SIM_DEVICE_A12,SIM_MODE_PWNED_DFU);

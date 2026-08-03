@@ -5,6 +5,7 @@
 #include <string.h>
 #include <simulator.h>
 
+int simulator_fast = 0;
 static int enabled = 0;
 static int sim_device = 0;
 static int sim_mode = 0;
@@ -18,7 +19,7 @@ void simulator_init(int device, int mode)
     printf("[SIM] Detecting device...\n");
     sleep(2);
     printf("[SIM] Device connected\n");
-    sleep(1);
+    if (!simulator_fast) sleep(1);
 
     if (device == SIM_DEVICE_A12) {
         sleep(2);
@@ -53,13 +54,13 @@ void *simulator_pongo_helper(void *ptr) {
     LOG(LOG_INFO, "Simulator: PongoOS connected");
     set_found_pongo(1);
 
-    sleep(1);
+    if (!simulator_fast) sleep(1);
     LOG(LOG_INFO, "Simulator: accepting Pongo commands");
-    sleep(1);
+    if (!simulator_fast) sleep(1);
     LOG(LOG_INFO, "Simulator: KPF uploaded");
-    sleep(1);
+    if (!simulator_fast) sleep(1);
     LOG(LOG_INFO, "Simulator: ramdisk uploaded");
-    sleep(1);
+    if (!simulator_fast) sleep(1);
     LOG(LOG_INFO, "Simulator: boot sequence ready");
     device_has_booted = 1;
 
