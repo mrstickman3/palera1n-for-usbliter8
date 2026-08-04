@@ -67,10 +67,10 @@ type this into your terminal:
 ```
 git clone https://github.com/mrstickman3/palera1n-for-usbliter8
 cd palera1n-for-usbliter8
-make
+sudo make
 sudo make install
 ```
-that last part of the command will make your terminal ask for your password. from now on, just type
+from now on, just type
 ```
 palera1n
 ```
