@@ -6,7 +6,7 @@ A port of palera1n designed for usbliter8.
 
 This project aims to bring palera1n functionality to A12–A13 devices through usbliter8.
 
-At this stage, testing has only confirmed that the tool launches successfully. The jailbreak process itself has not been fully verified, so device compatibility and jailbreak success are not guaranteed. Further testing is required.
+At this stage, testing has only confirmed that the tool launches successfully. The jailbreak process does not currently work. That is being fixed. Expect a fix within a week or so
 
 ## Device Support
 
