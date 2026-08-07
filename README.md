@@ -1,84 +1,26 @@
 # palera1n for usbliter8
 
-btw like 90% of this was made with AI
+A port of palera1n designed for usbliter8.
 
+## Overview
 
-A jailbreak for A12-A13
+This project aims to bring palera1n functionality to A12–A13 devices through usbliter8.
 
-
-btw the only part that's tested is if it runs, idk if it even jailbreaks your device. hopefully it does tho
-
+At this stage, testing has only confirmed that the tool launches successfully. The jailbreak process itself has not been fully verified, so device compatibility and jailbreak success are not guaranteed. Further testing is required.
 
 ## Device Support
 
-<!--- Mobile --->
+| iPhone(s) | iPad(s) | Apple TV(s) |
+| --- | --- | --- |
+| iPhone XS | iPad Air (3rd generation) | Apple TV 4K (2nd generation) |
+| iPhone XS Max | iPad mini (5th generation) | |
+| iPhone XR | iPad (8th generation) | |
+| iPhone 11 | iPad (9th generation) | |
+| iPhone 11 Pro | | |
+| iPhone 11 Pro Max | | |
+| iPhone SE (2nd generation) | | |
 
-| iPhone(s)                 | iPad(s)                        		| Apple TV(s)        			|
-|-							|-										|-								|								
-| iPhone XS                 | iPad Air (3rd gen)        			| Apple TV 4K (2nd generation)  |                     	
-| iPhone XS Max             | iPad mini (5th generation)	    	|								|                            	
-| iPhone XR                 | iPad (8th generation)					|								|								
-| iPhone 11                 | iPad (9th generation) 				|								|								
-| iPhone 11 Pro             |               						|								|								
-| iPhone 11 Pro Max         |           							|								|                               
-| iPhone SE (2nd gen)       |               						|								|								
+## Usage
 
-
-
-
-## Usage 
-i dont even know if this part even works tbh
-```
-Usage: palera1n [-DEhpvVdsSLRnPI] [-e boot arguments] [-k Pongo image] [-o overlay file] [-r ramdisk file] [-K KPF file] [-i checkra1n file]
-
-	--version				Print version
-	--force-revert				Remove jailbreak
-	-d, --demote				Demote
-	-D, --dfuhelper				Exit after entering DFU
-	-e, --boot-args <boot arguments>	XNU boot arguments
-	-E, --enter-recovery			Enter recovery mode
-	-h, --help				Show this help
-	-i, --override-checkra1n <file>		Override checkra1n
-	-k, --override-pongo <file>		Override Pongo image
-	-K, --override-kpf <file>		Override kernel patchfinder
-	-L, --jbinit-log-to-file		Make jbinit log to /cores/jbinit.log (can be read from sandbox while jailbroken)
-	-n, --exit-recovery			Exit recovery mode
-	-I, --device-info			Print info about the connected device
-	--simulator <chip>			Simulate having a A12/A13 device.
-	-o, --override-overlay <file>		Override overlay
-	-p, --pongo-shell			Boots to PongoOS shell
-	-P, --pongo-full			Boots to a PongoOS shell with default images already uploaded
-	-r, --override-ramdisk <file>		Override ramdisk
-	-R, --reboot-device			Reboot connected device in normal mode
-	-s, --safe-mode				Enter safe mode
-	-S, --no-colors				Disable colors on the command line
-	-v, --debug-logging			Enable debug logging
-		  This option can be repeated for extra verbosity.
-	-V, --verbose-boot			Verbose boot
-
-Environmental variables:
-	TMPDIR		temporary diretory (path the built-in checkra1n will be extracted to)
-```
-
-## Using it
-
-
-type this into your terminal:
-```
-git clone https://github.com/mrstickman3/palera1n-for-usbliter8
-cd palera1n-for-usbliter8
-sudo make
-sudo make install
-```
-from now on, just type
-```
-palera1n
-```
-and it will run palera1n
-
-## Credits
-
-Paradigm Shift - Usbliter8
-
-Palera1n - Palera1n
+The command-line interface is currently unverified. Some functionality may not work as expected.
 
