@@ -73,4 +73,5 @@ to launch the tool.
 
 Credits
 Paradigm Shift — usbliter8
+
 palera1n team — original palera1n jailbreak project
