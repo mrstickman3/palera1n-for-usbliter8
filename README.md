@@ -71,7 +71,8 @@ palera1n
 ```
 to launch the tool.
 
-Credits
+##Credits
+
 Paradigm Shift — usbliter8
 
 palera1n team — original palera1n jailbreak project
