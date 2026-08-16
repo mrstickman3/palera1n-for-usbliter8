@@ -55,6 +55,7 @@ typedef uint64_t palerain_option_t;
 #define palerain_option_test1                (UINT64_C(1) << 62) /* Developer test option 1 */
 #define palerain_option_test2                (UINT64_C(1) << 63) /* Developer test option 2 */
 #define palerain_option_simulator_pwned_dfu (UINT64_C(1) << 34)  /* Skip exploit, use pwned DFU mode */
+#define palerain_option_diagnostics         (UINT64_C(1) << 35) /* Diagnostics */
 
 #define PALEINFO_MAGIC 'PLSH'
 

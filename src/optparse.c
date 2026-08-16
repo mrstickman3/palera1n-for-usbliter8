@@ -144,7 +144,7 @@ int optparse(int argc, char* argv[]) {
 	int opt;
 	int index;
 	while ((opt = getopt_long(argc, argv,
-        "DEhpvVlLdsSTtRnPIe:o:r:K:k:i:m:y:"
+        "DEhpvVlLdsSTtRnPIe:o:r:K:k:i:m:y:D"
 #ifdef DEV_BUILD
 	"12"
 #endif
@@ -309,6 +309,9 @@ int optparse(int argc, char* argv[]) {
 
 		case 'y':
 			dry_run = 1;
+			break;
+
+			palerain_flags |= palerain_option_diagnostics;
 			break;
 
 		case 'm':

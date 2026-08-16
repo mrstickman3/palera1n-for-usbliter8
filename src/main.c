@@ -114,6 +114,20 @@ static int palera1n(int argc, char *argv[], char *envp[]) {
 	pthread_mutex_init(&ecid_dfu_wait_mutex, NULL);
 	if ((ret = build_checks())) return ret;
 	if ((ret = optparse(argc, argv))) goto cleanup;
+	if (palerain_flags & palerain_option_diagnostics) {
+		LOG(LOG_INFO,"=== Diagnostics ===");
+		LOG(LOG_INFO,"Build: %s %s",__DATE__,__TIME__);
+		LOG(LOG_INFO,"Simulator: %s",simulator_is_enabled()?"Enabled":"Disabled");
+#ifdef USE_LIBUSB
+		LOG(LOG_INFO,"libusb: enabled");
+#else
+		LOG(LOG_INFO,"libusb: disabled");
+#endif
+		LOG(LOG_INFO,"TMPDIR=%s",getenv("TMPDIR")?getenv("TMPDIR"):"(null)");
+		LOG(LOG_INFO,"USBMUXD_SOCKET_ADDRESS=%s",getenv("USBMUXD_SOCKET_ADDRESS")?getenv("USBMUXD_SOCKET_ADDRESS"):"(not set)");
+		goto normal_exit;
+	}
+
 	LOG(LOG_INFO, "DEBUG: simulator=%d flags=0x%llx", simulator_is_enabled(), (unsigned long long)palerain_flags);
 	LOG(LOG_INFO, "DEBUG simulator=%d", simulator_is_enabled());
 	if (!(palerain_flags & palerain_option_device_info) && (palerain_flags & palerain_option_palerain_version)) goto normal_exit;
