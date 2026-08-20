@@ -13,8 +13,8 @@ int detect_pwned_dfu(irecv_client_t device) {
         LOG(LOG_ERROR, "Unable to query DFU device");
         return -1;
     }
-if (info->srnm && strstr(info->srnm, "PWND:")) {
-    LOG(LOG_INFO, "Pwned DFU marker detected: %s", info->srnm);
+if (info->serial_string && strstr(info->serial_string, "PWND:")) {
+    LOG(LOG_INFO, "Pwned DFU marker detected: %s", info->serial_string);
     return 1;
 }
     return 0;

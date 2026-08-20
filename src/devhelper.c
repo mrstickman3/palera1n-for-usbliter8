@@ -82,7 +82,7 @@ bool cpid_is_arm64(unsigned int cpid) {
 	);
 }
 
-bool cpid_needs_usbliter8(unsigned int cpid) { return cpid == 0x8000 || cpid == 0x8001 || cpid == 0x8003 || cpid == 0x8010 || cpid == 0x8015 || cpid == 0x8020; }
+bool cpid_needs_usbliter8(unsigned int cpid) { return cpid == 0x8000 || cpid == 0x8001 || cpid == 0x8003 || cpid == 0x8010 || cpid == 0x8015 || cpid == 0x8020 || cpid == 0x8030; }
 
 int subscribe_cmd(usbmuxd_event_cb_t device_event_cb, irecv_device_event_cb_t irecv_event_cb)
 {

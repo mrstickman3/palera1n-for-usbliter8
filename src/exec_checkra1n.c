@@ -31,7 +31,7 @@ extern char* gOverrideLibcheckra1nHelper;
 #include <tui.h>
 #endif
 #include <xxd-embedded.h>
-char* pongo_path = NULL;
+char* pongo_path = "/Users/adrianoacosta/palera1n-for-usbliter8/pongoOS-src/build/Pongo.bin";
 bool external_pongo = false;
 char* ext_checkra1n = NULL;
 

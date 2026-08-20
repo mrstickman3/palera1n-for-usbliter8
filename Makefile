@@ -8,6 +8,8 @@ CFLAGS += -Wno-unused-variable -I$(SRC)/src -std=c99 -pedantic-errors -D_C99_SOU
 CFLAGS += -I$(shell brew --prefix)/include
 CFLAGS += -Wno-strict-prototypes
 LDFLAGS += -L$(shell brew --prefix)/lib
+LDFLAGS += $(shell pkg-config --libs libusb-1.0)
+CFLAGS += $(shell pkg-config --cflags libusb-1.0)
 LIBS += -limobiledevice-1.0
 LIBS += -lirecovery-1.0
 LIBS += -lusbmuxd-2.0

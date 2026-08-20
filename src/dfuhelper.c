@@ -27,6 +27,7 @@
 #include <ANSI-color-codes.h>
 #include <palerain.h>
 #include <pwned_dfu.h>
+#include "usbliter8_boot.h"
 
 #define FORMAT_KEY_VALUE 1
 #define FORMAT_XML 2
@@ -243,11 +244,42 @@ static void* connected_dfu_mode(struct irecv_device_info* info) {
 		if (irecv_open_with_ecid(&device, info->ecid) == IRECV_E_SUCCESS) {
 			if (detect_pwned_dfu(device)) {
 				LOG(LOG_INFO, "Pwned DFU detected");
+
+				if (cpid_needs_usbliter8(cpid)) {
+					LOG(LOG_INFO, "usbliter8 device found! executing iBoot commands");
+					if (device) irecv_close(device);
+					device = NULL;
+
+					char *boot_path = pongo_path;
+					char *temp_pongo = NULL;
+					if (!boot_path) {
+						temp_pongo = get_embedded_pongo_path();
+						boot_path = temp_pongo;
+					}
+					int boot_ret = -1;
+					if (!boot_path) {
+						LOG(LOG_ERROR, "No PongoOS image available");
+					} else {
+						boot_ret = usbliter8_boot_file(boot_path);
+						if (temp_pongo) { unlink(temp_pongo); free(temp_pongo); }
+					}
+					if (boot_ret != 0) {
+						LOG(LOG_ERROR, "usbliter8_boot_file() failed (%d)", boot_ret);
+					} else {
+						device_has_booted = true;
+						set_spin(0);
+						unsubscribe_cmd();
+						pthread_exit(NULL);
+						return NULL;
+					}
+				} else {
+					LOG(LOG_WARNING, "Pwned DFU detected but cpid=0x%04x has no usbliter8 handler", cpid);
+				}
 			} else {
 				LOG(LOG_WARNING, "Pwned DFU not detected, using normal flow");
 				palerain_flags &= ~palerain_option_pwned_dfu;
 			}
-			irecv_close(device);
+			if (device) irecv_close(device);
 		} else {
 			LOG(LOG_WARNING, "Could not open DFU device");
 			palerain_flags &= ~palerain_option_pwned_dfu;
