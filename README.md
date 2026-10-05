@@ -81,3 +81,5 @@ to launch the tool.
 Paradigm Shift — usbliter8
 
 palera1n team — original palera1n jailbreak project
+
+checkra1n - original pongoOS
