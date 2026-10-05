@@ -10,8 +10,9 @@ At this stage, testing has only confirmed that the tool launches successfully. T
 
 ## TO-DO
 
-PongoOS port for t8020/t8030
-Boot into jailbroken iOS
+PongoOS port for t8020/t8030, Boot into jailbroken iOS
+
+
 ## Device Support
 
 | iPhone(s) | iPad(s) | Apple TV(s) |
