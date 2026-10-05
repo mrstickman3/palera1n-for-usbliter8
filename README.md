@@ -6,8 +6,12 @@ A port of palera1n designed for usbliter8.
 
 This project aims to bring palera1n functionality to A12–A13 devices through usbliter8.
 
-At this stage, testing has only confirmed that the tool launches successfully. The jailbreak process does not currently work. That is being fixed. Expect a fix within a week or so
+At this stage, testing has only confirmed that the tool launches successfully. The jailbreak process does not currently work. That is being fixed.
 
+## TO-DO
+
+PongoOS port for t8020/t8030
+Boot into jailbroken iOS
 ## Device Support
 
 | iPhone(s) | iPad(s) | Apple TV(s) |
