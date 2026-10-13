@@ -226,7 +226,8 @@ int wait_for_pongo(void) {
     IONotificationPortRef notifyPort = IONotificationPortCreate(kIOMasterPortDefault);
 
     CFRetain(cfdict);
-    // CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(notifyPort), kCFRunLoopDefaultMode);
+    /* Add the notification port to the run loop so we receive hotplug events */
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), IONotificationPortGetRunLoopSource(notifyPort), kCFRunLoopDefaultMode);
 
     ret = IOServiceAddMatchingNotification(notifyPort, kIOFirstMatchNotification, cfdict, &FoundDevice, &stuff, &found);
     if(ret != KERN_SUCCESS)
@@ -244,9 +245,9 @@ int wait_for_pongo(void) {
         return -1;
     }
     LostDevice(&stuff, lost);
-    // CFRunLoopRun();
+    /* Run the CFRunLoop to receive hotplug notifications */
     while (get_spin()) {
-        sleep(1);
+        CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, false);
     }
     CFRelease(cfdict);
     return 0;

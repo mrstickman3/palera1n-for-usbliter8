@@ -31,7 +31,7 @@ extern char* gOverrideLibcheckra1nHelper;
 #include <tui.h>
 #endif
 #include <xxd-embedded.h>
-char* pongo_path = "/Users/adrianoacosta/palera1n-for-usbliter8/pongoOS-src/build/Pongo.bin";
+char* pongo_path = NULL;
 bool external_pongo = false;
 char* ext_checkra1n = NULL;
 
@@ -53,6 +53,7 @@ int exec_checkra1n(void) {
 		if (fd_pongo == -1) {
 			LOG(LOG_FATAL, "Cannot open temporary file %s: %d (%s)", pongo_path, errno, strerror(errno));
 			free(pongo_path);
+			pongo_path = NULL;
 			return -1;
 		}
 		ssize_t didWrite_Pongo_bin = write(fd_pongo, Pongo_bin, Pongo_bin_len);
@@ -64,7 +65,10 @@ int exec_checkra1n(void) {
 			pongo_path = NULL;
 			return -1;
 		}
-	} else external_pongo = true;
+		close(fd_pongo);
+	} else {
+		external_pongo = true;
+	}
 #endif
 	if (ext_checkra1n != NULL) {
 		checkra1n_path = ext_checkra1n;
@@ -131,6 +135,8 @@ int exec_checkra1n(void) {
 			int helper_fd = mkstemp(libcheckra1nhelper_dylib_path);
 			if (helper_fd == -1) {
 				LOG(LOG_FATAL, "Cannot open temporary file: %d (%s)", errno, strerror(errno));
+				free(libcheckra1nhelper_dylib_path);
+				libcheckra1nhelper_dylib_path = NULL;
 				return -1;
 			}
 			ssize_t didWrite_libcheckra1nhelper = write(helper_fd, libcheckra1nhelper_dylib, libcheckra1nhelper_dylib_len);
@@ -138,6 +144,8 @@ int exec_checkra1n(void) {
 				LOG(LOG_FATAL, "Size written does not match expected: %zd != %" PRIu32 ": %d (%s)", didWrite_libcheckra1nhelper, libcheckra1nhelper_dylib_len, errno, strerror(errno));
 				close(helper_fd);
 				unlink(libcheckra1nhelper_dylib_path);
+				free(libcheckra1nhelper_dylib_path);
+				libcheckra1nhelper_dylib_path = NULL;
 				return -1;
 			}
 			close(helper_fd);
@@ -145,6 +153,8 @@ int exec_checkra1n(void) {
 			if (ret) {
 				LOG(LOG_FATAL, "Cannot chmod %s: %d (%s)", libcheckra1nhelper_dylib_path, errno, strerror(errno));
 				unlink(libcheckra1nhelper_dylib_path);
+				free(libcheckra1nhelper_dylib_path);
+				libcheckra1nhelper_dylib_path = NULL;
 				return -1;
 			}
 setenv_ra1n:
@@ -152,17 +162,17 @@ setenv_ra1n:
 	}
 #endif
 	char args[0x10] = "-E";
-	if ((palerain_flags & palerain_option_demote)) strncat(args, "d", 0xf);
-	if (!(palerain_flags & palerain_option_checkrain_is_clone)) {
+	if (PALERAIN_OPTION_TEST(palerain_flags, palerain_option_demote)) strncat(args, "d", 0xf);
+	if (!PALERAIN_OPTION_TEST(palerain_flags, palerain_option_checkrain_is_clone)) {
 		strncat(args, "p", 0xf);
 		if (verbose >= 2) strncat(args, "v", 0xf);
-		if ((palerain_flags & palerain_option_no_colors)) strncat(args, "n", 0xf);
+		if (PALERAIN_OPTION_TEST(palerain_flags, palerain_option_no_colors)) strncat(args, "n", 0xf);
 	} else {
 		strncat(args, "R", 0xf);
 	}
 	LOG(LOG_VERBOSE5, "%s", args);
 	if (pongo_path != NULL) LOG(LOG_VERBOSE5, "%s", pongo_path);
-	pid_t pid;
+	pid_t pid = -1;  /* Initialized to -1 to track spawn success */
 	posix_spawn_file_actions_t action;
     posix_spawn_file_actions_init(&action);
 #ifdef TUI
@@ -182,7 +192,11 @@ setenv_ra1n:
 	posix_spawn_file_actions_destroy(&action);
 	if (ret) {
 		LOG(LOG_FATAL, "Cannot posix spawn %s: %d (%s)", checkra1n_path, errno, strerror(errno));
-		if (ext_checkra1n != NULL) unlink(checkra1n_path);
+		if (ext_checkra1n == NULL && checkra1n_path != NULL) {
+			unlink(checkra1n_path);
+			free(checkra1n_path);
+			checkra1n_path = NULL;
+		}
 		return -1;
 	}
 	LOG(LOG_VERBOSE2, "%s spawned successfully", checkra1n_path);
@@ -196,12 +210,14 @@ setenv_ra1n:
 #endif
 #endif
 	sleep(2);
-	if (ext_checkra1n == NULL) {
+	if (ext_checkra1n == NULL && checkra1n_path != NULL) {
 		unlink(checkra1n_path);
 		free(checkra1n_path);
 		checkra1n_path = NULL;
 	}
-	waitpid(pid, NULL, 0);
+	if (pid > 0) {
+		waitpid(pid, NULL, 0);
+	}
 	if (!external_pongo && pongo_path != NULL) {
 		unlink(pongo_path);
 	}

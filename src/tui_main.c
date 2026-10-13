@@ -131,24 +131,39 @@ extern int saved_argc;
 extern char** saved_argv;
 extern char** saved_envp;
 
+/* Async-signal-safe flag to indicate termination request */
+static volatile sig_atomic_t tui_terminate_requested = 0;
+static volatile sig_atomic_t tui_terminate_restart = 0;
+
 void tui_terminate(int sig) {
-    destroy_window();
-    if (tui_is_restarting) {
+    /* Only set flags here - actual cleanup done in main loop */
+    tui_terminate_requested = 1;
+    tui_terminate_restart = tui_is_restarting;
+    /* Note: destroy_window() is NOT async-signal-safe, so we defer it */
+    /* The main loop will call destroy_window() when it sees the flag */
+}
+
+static void tui_handle_terminate(void) {
+    if (tui_terminate_requested) {
+        destroy_window();
+        if (tui_terminate_restart) {
 #ifdef __APPLE__
-    sem_close(tui_event_semaphore);
-    sem_unlink(random_sem_name);
-    char pathbuf[4096];
-    if (proc_pidpath(getpid(), pathbuf, sizeof(pathbuf)) <= 0) {
-        LOG(LOG_FATAL, "Failed to get path of running executable");
-        exit(1);
-    }
-    
-    execve(pathbuf, saved_argv, saved_envp);
+            sem_close(tui_event_semaphore);
+            sem_unlink(random_sem_name);
+            char pathbuf[4096];
+            if (proc_pidpath(getpid(), pathbuf, sizeof(pathbuf)) <= 0) {
+                /* Can't use LOG here, use direct write */
+                const char *msg = "Failed to get path of running executable\n";
+                write(STDERR_FILENO, msg, strlen(msg));
+                _exit(1);
+            }
+            execve(pathbuf, saved_argv, saved_envp);
 #elif defined(__linux__)
-    execve("/proc/self/exe", saved_argv, saved_envp);
+            execve("/proc/self/exe", saved_argv, saved_envp);
 #endif
-    } else {
-        exit(0);
+        } else {
+            _exit(0);
+        }
     }
 }
 
@@ -157,7 +172,8 @@ static void resize_handler(int sig) {
 }
 
 int tui(void) {
-    if (strncmp(getenv("TERM"), "xterm", 5) != 0) {
+    const char *term = getenv("TERM");
+    if (!term || strncmp(term, "xterm", 5) != 0) {
         supports_bright_colors = false;
     }
     srand(time(NULL));
@@ -197,6 +213,9 @@ int tui(void) {
 
     tui_state = MAIN_SCREEN;
     while (1) {
+        /* Check for termination request from signal handler */
+        tui_handle_terminate();
+
         switch (tui_state) {
         case ERROR_SCREEN:
         case EXIT_SCREEN:

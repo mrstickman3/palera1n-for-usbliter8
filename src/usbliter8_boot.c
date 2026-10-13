@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <libusb.h>
 
@@ -32,13 +33,69 @@
 
 #define REQTYPE_CLASS_OUT (LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE | LIBUSB_ENDPOINT_OUT)
 
-static libusb_device_handle *open_pwnd_device(void)
+static int download_image(libusb_device_handle *h, const unsigned char *buf, size_t len,
+                          usbliter8_progress_cb_t cb, void *user_data)
 {
-    libusb_device_handle *handle = libusb_open_device_with_vid_pid(NULL, DFU_VID, DFU_PID);
+    size_t offset = 0;
+    while (offset < len) {
+        size_t chunk = (len - offset < TRANSFER_SIZE) ? (len - offset) : TRANSFER_SIZE;
+        int r = libusb_control_transfer(h, REQTYPE_CLASS_OUT, DFU_DNLOAD, 0, 0,
+                                         (unsigned char *)(buf + offset), (uint16_t)chunk,
+                                         CTRL_TIMEOUT_MS);
+        if (r < 0) {
+            fprintf(stderr, "\nerror: DFU_DNLOAD failed at offset 0x%zx: %s\n",
+                    offset, libusb_error_name(r));
+            /* Send DFU_ABORT to reset the device state on failure */
+            libusb_control_transfer(h, REQTYPE_CLASS_OUT, DFU_ABORT, 0, 0, NULL, 0, 1000);
+            return -1;
+        }
+        offset += chunk;
+        if (cb) {
+            cb(offset, len, user_data);
+        } else {
+            printf("\rsent 0x%zx / 0x%zx", offset, len);
+            fflush(stdout);
+        }
+    }
+    if (!cb) {
+        printf("\n");
+    }
+
+    int r = libusb_control_transfer(h, REQTYPE_CLASS_OUT, DFU_DNLOAD, 0, 0, NULL, 0, 1000);
+    if (r < 0) {
+        fprintf(stderr, "warning: closing DFU_DNLOAD failed: %s\n", libusb_error_name(r));
+        /* Try to abort on close failure too */
+        libusb_control_transfer(h, REQTYPE_CLASS_OUT, DFU_ABORT, 0, 0, NULL, 0, 1000);
+    }
+    return 0;
+}
+
+int usbliter8_boot(const unsigned char *buf, size_t len)
+{
+    libusb_context *usb_ctx = NULL;
+    return usbliter8_boot_with_progress(buf, len, NULL, NULL);
+}
+
+int usbliter8_boot_with_progress(const unsigned char *buf, size_t len, usbliter8_progress_cb_t cb, void *user_data)
+{
+    if (!buf || len == 0) {
+        fprintf(stderr, "error: empty image buffer\n");
+        return -1;
+    }
+
+    libusb_context *ctx = NULL;
+    int r = libusb_init(&ctx);
+    if (r < 0) {
+        fprintf(stderr, "error: libusb_init failed: %s\n", libusb_error_name(r));
+        return -1;
+    }
+
+    libusb_device_handle *handle = libusb_open_device_with_vid_pid(ctx, DFU_VID, DFU_PID);
     if (!handle) {
         fprintf(stderr, "error: no DFU device found (%04x:%04x). "
                         "Is the device plugged in and in DFU mode?\n", DFU_VID, DFU_PID);
-        return NULL;
+        libusb_exit(ctx);
+        return -1;
     }
 
     libusb_set_auto_detach_kernel_driver(handle, 1);
@@ -51,85 +108,73 @@ static libusb_device_handle *open_pwnd_device(void)
         libusb_get_string_descriptor_ascii(handle, desc.iSerialNumber, serial, sizeof(serial) - 1);
     }
 
+
     if (!strstr((const char *)serial, "PWND:[")) {
         fprintf(stderr, "error: device is not in Pwned DFU mode\n");
         if (serial[0]) fprintf(stderr, "serial: %s\n", serial);
         libusb_close(handle);
-        return NULL;
-    }
-
-    printf("Serial: %s\n", serial);
-    return handle;
-}
-
-static int download_image(libusb_device_handle *h, const unsigned char *buf, size_t len)
-{
-    size_t offset = 0;
-    while (offset < len) {
-        size_t chunk = (len - offset < TRANSFER_SIZE) ? (len - offset) : TRANSFER_SIZE;
-        int r = libusb_control_transfer(h, REQTYPE_CLASS_OUT, DFU_DNLOAD, 0, 0,
-                                         (unsigned char *)(buf + offset), (uint16_t)chunk,
-                                         CTRL_TIMEOUT_MS);
-        if (r < 0) {
-            fprintf(stderr, "\nerror: DFU_DNLOAD failed at offset 0x%zx: %s\n",
-                    offset, libusb_error_name(r));
-            return -1;
-        }
-        offset += chunk;
-        printf("\rsent 0x%zx / 0x%zx", offset, len);
-        fflush(stdout);
-    }
-    printf("\n");
-
-    int r = libusb_control_transfer(h, REQTYPE_CLASS_OUT, DFU_DNLOAD, 0, 0, NULL, 0, 1000);
-    if (r < 0) {
-        fprintf(stderr, "warning: closing DFU_DNLOAD failed: %s\n", libusb_error_name(r));
-    }
-    return 0;
-}
-
-int usbliter8_boot(const unsigned char *buf, size_t len)
-{
-    if (!buf || len == 0) {
-        fprintf(stderr, "error: empty image buffer\n");
+        libusb_exit(ctx);
         return -1;
     }
 
-    int r = libusb_init(NULL);
-    if (r < 0) {
-        fprintf(stderr, "error: libusb_init failed: %s\n", libusb_error_name(r));
-        return -1;
+    if (!cb) {
+        printf("Serial: %s\n", serial);
     }
-
-    libusb_device_handle *handle = open_pwnd_device();
-    if (!handle) { libusb_exit(NULL); return -1; }
 
     r = libusb_claim_interface(handle, 0);
     if (r < 0) {
         fprintf(stderr, "error: could not claim interface 0: %s\n", libusb_error_name(r));
         libusb_close(handle);
-        libusb_exit(NULL);
+        libusb_exit(ctx);
         return -1;
     }
 
-    int rc = download_image(handle, buf, len);
+    int rc = download_image(handle, buf, len, cb, user_data);
     if (rc == 0) {
-        r = libusb_control_transfer(handle, REQTYPE_CLASS_OUT, CUSTOM_BOOT, 0, 0, NULL, 0, 1000);
+        fprintf(stderr, "DEBUG: sending CUSTOM_BOOT\\n");
+        r = libusb_control_transfer(handle, REQTYPE_CLASS_OUT,
+                                    CUSTOM_BOOT, 0, 0, NULL, 0, 1000);
+        fprintf(stderr, "DEBUG: CUSTOM_BOOT result=%d (%s)\\n",
+                r, r < 0 ? libusb_error_name(r) : "OK");
+
         if (r < 0) {
-            fprintf(stderr, "warning: CUSTOM_BOOT failed: %s\n", libusb_error_name(r));
+            fprintf(stderr, "warning: CUSTOM_BOOT failed: %s\\n",
+                    libusb_error_name(r));
         }
+
+        fprintf(stderr, "DEBUG: sending DFU_ABORT\\n");
+        int abort_r = libusb_control_transfer(handle, REQTYPE_CLASS_OUT,
+                                              DFU_ABORT, 0, 0, NULL, 0, 1000);
+        fprintf(stderr, "DEBUG: DFU_ABORT result=%d (%s)\\n",
+                abort_r, abort_r < 0 ? libusb_error_name(abort_r) : "OK");
+
+        if (!cb) printf("Boot triggered\\n");
+
+        /* Release the claimed interface before destroying the libusb context. */
+        libusb_release_interface(handle, 0);
+        libusb_close(handle);
+        handle = NULL;
+    } else {
+        /* On download failure, send DFU_ABORT to reset device state */
+        fprintf(stderr, "warning: download failed, sending DFU_ABORT\n");
         libusb_control_transfer(handle, REQTYPE_CLASS_OUT, DFU_ABORT, 0, 0, NULL, 0, 1000);
-        printf("Boot triggered\n");
+
+        /* Clean up - device is still in DFU mode so handle is valid */
+        libusb_release_interface(handle, 0);
+        libusb_close(handle);
     }
 
-    libusb_release_interface(handle, 0);
-    libusb_close(handle);
-    libusb_exit(NULL);
+    libusb_exit(ctx);
 
     return rc;
 }
 
 int usbliter8_boot_file(const char *path)
+{
+    return usbliter8_boot_file_with_progress(path, NULL, NULL);
+}
+
+int usbliter8_boot_file_with_progress(const char *path, usbliter8_progress_cb_t cb, void *user_data)
 {
     FILE *f = fopen(path, "rb");
     if (!f) { perror("fopen"); return -1; }
@@ -148,8 +193,10 @@ int usbliter8_boot_file(const char *path)
     }
     fclose(f);
 
-    printf("Image: %s (%ld bytes)\n", path, size);
-    int rc = usbliter8_boot(buf, (size_t)size);
+    if (!cb) {
+        printf("Image: %s (%ld bytes)\n", path, size);
+    }
+    int rc = usbliter8_boot_with_progress(buf, (size_t)size, cb, user_data);
     free(buf);
     return rc;
 }

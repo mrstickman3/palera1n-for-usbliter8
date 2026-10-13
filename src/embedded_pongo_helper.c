@@ -8,8 +8,14 @@ extern const uint8_t Pongo_bin[];
 extern const uint32_t Pongo_bin_len;
 
 char* get_embedded_pongo_path(void) {
-    char *tmp_path = strdup("/tmp/usbliter8-pongo-XXXXXX");
+    const char *tmpdir = getenv("TMPDIR");
+    if (!tmpdir) tmpdir = "/tmp";
+
+    size_t path_len = strlen(tmpdir) + strlen("/usbliter8-pongo-XXXXXX") + 1;
+    char *tmp_path = malloc(path_len);
     if (!tmp_path) return NULL;
+
+    snprintf(tmp_path, path_len, "%s/usbliter8-pongo-XXXXXX", tmpdir);
 
     int fd = mkstemp(tmp_path);
     if (fd < 0) { perror("mkstemp"); free(tmp_path); return NULL; }

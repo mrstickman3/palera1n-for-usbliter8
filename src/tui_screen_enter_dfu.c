@@ -42,6 +42,9 @@ enum {
 } device_type;
 
 static int tui_product_type_to_device_type(char *product_type) {
+    if (!product_type) {
+        return DEVICE_TYPE_IPHONE_SE;
+    }
     if (strcmp(product_type, "iPhone8,1") == 0 || strcmp(product_type, "iPhone8,2") == 0) {
         return DEVICE_TYPE_IPHONE_6S;
     }
@@ -342,8 +345,19 @@ void tui_screen_enter_dfu_redraw(void) {
     fflush(stdout);
 }
 
-// TODO: IMPLEMENT REAL ENTER RECOVERY
 static int dfu_time = 0;
+
+/* Real implementation for entering recovery mode */
+static int tui_enter_recovery_mode_real(const char *udid) {
+    LOG(LOG_INFO, "Entering recovery mode for device: %s", udid);
+    int ret = enter_recovery_cmd(udid);
+    if (ret != 0) {
+        LOG(LOG_ERROR, "Failed to enter recovery mode: %d", ret);
+        return -1;
+    }
+    LOG(LOG_INFO, "Device entered recovery mode successfully");
+    return 0;
+}
 
 static tui_screen_t tui_enter_dfu(void) {
     if (tui_connected_devices && !tui_connected_devices->next) {

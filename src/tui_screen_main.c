@@ -351,6 +351,9 @@ static int tui_version_extract_component(const char *version, int index) {
 }
 
 static int tui_compare_versions(const char *firstVersion, const char *secondVersion) {
+    if (!firstVersion || !secondVersion) {
+        return -1;
+    }
     if (strcmp(firstVersion, secondVersion) == 0) {
         return 0;
     }
@@ -358,19 +361,19 @@ static int tui_compare_versions(const char *firstVersion, const char *secondVers
     int firstVersionMajor = tui_version_extract_component(firstVersion, 0);
     int firstVersionMinor = tui_version_extract_component(firstVersion, 1);
     int firstVersionPatch = tui_version_extract_component(firstVersion, 2);
-    
+
     int secondVersionMajor = tui_version_extract_component(secondVersion, 0);
     int secondVersionMinor = tui_version_extract_component(secondVersion, 1);
     int secondVersionPatch = tui_version_extract_component(secondVersion, 2);
-    
+
     if (firstVersionMajor != secondVersionMajor) {
         return firstVersionMajor - secondVersionMajor;
     }
-    
+
     if (firstVersionMinor != secondVersionMinor) {
         return firstVersionMinor - secondVersionMinor;
     }
-    
+
     return firstVersionPatch - secondVersionPatch;
 }
 

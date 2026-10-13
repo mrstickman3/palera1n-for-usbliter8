@@ -9,6 +9,9 @@
 
 void simulator_init(int device, int mode);
 int simulator_is_enabled(void);
+int simulator_checkm8_exploit(void);
+int simulator_usbliter8(void);
+int simulator_detect_dfu_mode(void);
 
 #endif
 

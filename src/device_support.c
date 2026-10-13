@@ -7,12 +7,18 @@ bool is_a12_a13(struct irecv_device_info *info)
     if (info == NULL)
         return false;
 
+    /* A12/A13 device CPIDs:
+     * 0x8000: A12 (iPhone XS/XS Max/XR, iPad 8th/9th gen, iPad Air 3rd, iPad mini 5th)
+     * 0x8001: A12X/A12Z (iPad Pro)
+     * 0x8003: A12 (different variant)
+     * 0x8020: A13 (iPhone 11/11 Pro/11 Pro Max, iPhone SE 2nd gen)
+     */
     switch (info->cpid) {
-        /*
-         * Add your A12/A13 CPIDs here.
-         * Leave this empty until you confirm the CPID table
-         * used by your target devices.
-         */
+        case 0x8000:
+        case 0x8001:
+        case 0x8003:
+        case 0x8020:
+            return true;
         default:
             return false;
     }

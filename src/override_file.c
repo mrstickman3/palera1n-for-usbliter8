@@ -28,22 +28,24 @@ int override_file(override_file_t *finfo, niarelap_file_t** orig, unsigned int *
 	ret = fstat(fd, &st);
 	if (ret) {
 		LOG(LOG_ERROR, "Cannot fstat fd from file %s: %d (%s)", filename, errno, strerror(errno));
+		close(fd);
 		return errno;
 	}
-	LOG(LOG_VERBOSE5, "override_file: fstat fd %d succeeded!", fd);	
+	LOG(LOG_VERBOSE5, "override_file: fstat fd %d succeeded!", fd);
 	void *addr = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (addr == MAP_FAILED) {
 		LOG(LOG_ERROR, "Failed to map file %s: %d (%s)", filename, errno, strerror(errno));
+		close(fd);
 		return errno;
 	}
 	LOG(LOG_VERBOSE5, "override_file: Override file mapped successfully");
 	finfo->magic = OVERRIDE_MAGIC;
 	finfo->fd = fd;
-	finfo->len = (unsigned int)st.st_size;;
-	finfo->ptr = *(niarelap_file_t*)addr;
+	finfo->len = (unsigned int)st.st_size;
+	finfo->ptr = (unsigned char*)addr;
 	finfo->orig_len = *orig_len;
-	finfo->orig_ptr = **orig;
-	*orig = (niarelap_file_t*)addr;
+	finfo->orig_ptr = (unsigned char*)*orig;  /* *orig is niarelap_file_t* (pointer to array), decays to unsigned char* */
+	*orig = (niarelap_file_t*)addr;  /* Cast addr to pointer to array type for assignment to niarelap_file_t* */
 	*orig_len = (unsigned int)st.st_size;
 	LOG(LOG_VERBOSE5, "override_file() finished!");
 	return 0;

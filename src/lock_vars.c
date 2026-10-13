@@ -21,6 +21,7 @@
 #include <spawn.h>
 #include <sys/mman.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include <libimobiledevice/libimobiledevice.h>
 
@@ -30,9 +31,15 @@
 #include <paleinfo.h>
 
 pthread_mutex_t spin_mutex, found_pongo_mutex, ecid_dfu_wait_mutex;
+pthread_mutex_t device_has_booted_mutex;
+pthread_mutex_t pongo_thr_running_mutex;
+pthread_mutex_t dfuhelper_thr_running_mutex;
 
 bool spin, found_pongo = 0;
 uint64_t ecid_wait_for_dfu = 0;
+bool device_has_booted = false;
+bool pongo_thr_running = false;
+bool dfuhelper_thr_running = false;
 
 static bool get_locked_bool(bool* val, pthread_mutex_t* mutex) {
     // fprintf(stderr, "%s: val = %p mutex = %p\n", __func__, (void*)val, (void*)mutex);
@@ -83,3 +90,19 @@ uint64_t set_ecid_wait_for_dfu(uint64_t ecid) {
     pthread_mutex_unlock(&ecid_dfu_wait_mutex);
     return ecid;
 }
+
+void set_device_has_booted(bool val)
+{
+    device_has_booted = val;
+}
+
+bool get_dfuhelper_thr_running(void)
+{
+    return dfuhelper_thr_running;
+}
+
+void set_dfuhelper_thr_running(bool val)
+{
+    dfuhelper_thr_running = val;
+}
+

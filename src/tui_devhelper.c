@@ -74,16 +74,16 @@ static int tui_connected_normal_mode(const usbmuxd_device_info_t *usbmuxd_device
         free(tui_dev);
 		return 0;
 	}
-    snprintf(tui_dev->product_type, sizeof(tui_dev->product_type), "%s", dev.productType);
-    snprintf(tui_dev->display_name, sizeof(tui_dev->display_name), "%s", dev.displayName);
+    snprintf(tui_dev->product_type, sizeof(tui_dev->product_type), "%s", dev.productType ? dev.productType : "");
+    snprintf(tui_dev->display_name, sizeof(tui_dev->display_name), "%s", dev.displayName ? dev.displayName : "");
     tui_dev->ecid = dev.ecid;
-    if (strncmp(dev.CPUArchitecture, "arm64", strlen("arm64"))) {
-        tui_dev->arm64 = false;
-    } else {
+    if (dev.CPUArchitecture && strncmp(dev.CPUArchitecture, "arm64", strlen("arm64")) == 0) {
         tui_dev->arm64 = true;
+    } else {
+        tui_dev->arm64 = false;
     }
-    snprintf(tui_dev->version, sizeof(tui_dev->version), "%s", dev.productVersion);
-	if (!strncmp(dev.productType, "iPhone10,", strlen("iPhone10,"))) {
+    snprintf(tui_dev->version, sizeof(tui_dev->version), "%s", dev.productVersion ? dev.productVersion : "");
+	if (dev.productType && !strncmp(dev.productType, "iPhone10,", strlen("iPhone10,"))) {
 		tui_dev->requires_passcode_disabled = true;
 		unsigned char passcode_state = 0;
 		ret = passstat_cmd(&passcode_state, usbmuxd_device->udid);
@@ -155,8 +155,8 @@ static void tui_irecv_device_event_cb(const irecv_device_event_t *event, void* u
             if (ret) {
                 LOG(LOG_WARNING, "Could not get info from device");
             } else {
-                snprintf(dev->product_type, sizeof(dev->product_type), "%s", info.product_type);
-                snprintf(dev->display_name, sizeof(dev->display_name), "%s", info.display_name);
+                snprintf(dev->product_type, sizeof(dev->product_type), "%s", info.product_type ? info.product_type : "");
+                snprintf(dev->display_name, sizeof(dev->display_name), "%s", info.display_name ? info.display_name : "");
             }*/
             irecv_device_t device = tui_get_recovery_device(event->device_info->ecid);
             if (!device) {
@@ -164,8 +164,8 @@ static void tui_irecv_device_event_cb(const irecv_device_event_t *event, void* u
                 free(dev);
                 return;
             }
-            snprintf(dev->product_type, sizeof(dev->product_type), "%s", device->product_type);
-            snprintf(dev->display_name, sizeof(dev->display_name), "%s", device->display_name);
+            snprintf(dev->product_type, sizeof(dev->product_type), "%s", device->product_type ? device->product_type : "");
+            snprintf(dev->display_name, sizeof(dev->display_name), "%s", device->display_name ? device->display_name : "");
             dev->cpid = device->chip_id;
             tui_connected_devices = dev;
 

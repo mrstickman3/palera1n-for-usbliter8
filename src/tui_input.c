@@ -120,7 +120,8 @@ void *tui_gpm_thread(void *arg) {
 
 void *tui_input_thread(void *arg) {
 #ifdef __linux__
-    if (strncmp(getenv("TERM"), "linux", 5) == 0) {
+    const char *term = getenv("TERM");
+    if (term && strncmp(term, "linux", 5) == 0) {
         Gpm_Connect conn;
         Gpm_Event event;
         conn.eventMask = GPM_UP | GPM_DOWN;

@@ -16,8 +16,14 @@
 #endif
 #include <ANSI-color-codes.h>
 
-bool device_has_booted = 0;
-int pongo_thr_running = 0;
+
+/* Cancellation flag for safe thread termination */
+static volatile sig_atomic_t pongo_cancel = 0;
+
+void pongo_request_cancel(void)
+{
+    pongo_cancel = 1;
+}
 
 #define ERR(...) LOG(LOG_VERBOSE, __VA_ARGS__)
 
@@ -41,12 +47,12 @@ static void *pongo_usb_callback(stuff_t *arg) {
 		return NULL;
 	set_found_pongo(1);
 #ifdef ROOTFUL
-	if ((palerain_flags & palerain_option_setup_rootful)) {
+	if (PALERAIN_OPTION_TEST(palerain_flags, palerain_option_setup_rootful)) {
 		strncat(xargs_cmd, " wdt=-1", 0x270 - strlen(xargs_cmd) - 1);	
 	}
 #endif
 	LOG(LOG_INFO, "Found PongoOS USB Device");
-	if (palerain_flags & palerain_option_pongo_exit)
+	if PALERAIN_OPTION_TEST(palerain_flags, palerain_option_pongo_exit)
 		goto done;
 
 	usb_device_handle_t handle = arg->handle;
@@ -107,7 +113,7 @@ static void *pongo_usb_callback(stuff_t *arg) {
 		issue_pongo_command(handle, "overlay");
 	}
 	issue_pongo_command(handle, xargs_cmd);
-	if ((palerain_flags & palerain_option_pongo_full)) goto done;
+	if (PALERAIN_OPTION_TEST(palerain_flags, palerain_option_pongo_full)) goto done;
 
 #ifdef TUI
 	if (tui_is_jailbreaking) {
@@ -119,10 +125,10 @@ static void *pongo_usb_callback(stuff_t *arg) {
 	issue_pongo_command(handle, "bootx");
 	LOG(LOG_INFO, "Booting Kernel...");
 #ifdef ROOTFUL
-	if ((palerain_flags & palerain_option_setup_partial_root)) {
+	if (PALERAIN_OPTION_TEST(palerain_flags, palerain_option_setup_partial_root)) {
 		LOG(LOG_INFO, "Please wait up to 5 minutes for the bindfs to be created.");
 		LOG(LOG_INFO, "Once the device reboots into recovery mode, run again without the -B (Create BindFS) option to jailbreak.");
-	} else if ((palerain_flags & palerain_option_setup_rootful)) {
+	} else if (PALERAIN_OPTION_TEST(palerain_flags, palerain_option_setup_rootful)) {
 		LOG(LOG_INFO, "Please wait up to 10 minutes for the fakefs to be created.");
 		LOG(LOG_INFO, "Once the device reboots into recovery mode, run again without the -c (Create FakeFS) option to jailbreak.");
 	}
@@ -223,7 +229,7 @@ static int upload_pongo_file(usb_device_handle_t handle, unsigned char *buf, uns
 		    if (verbose < 3 || verbose > 4) {
 				LOG(LOG_VERBOSE, "Uploaded %llu bytes to PongoOS", (unsigned long long)buf_len);
     		} else {
-				if ((palerain_flags & palerain_option_no_colors))
+				if (PALERAIN_OPTION_TEST(palerain_flags, palerain_option_no_colors))
 				    printf("/send mem:%p:%p\n[Uploaded %llu bytes]\n", (void*)buf, (void*)(buf + buf_len), (unsigned long long)buf_len);
 				else
         			printf("/send mem:%p:%p\n" BCYN "[Uploaded %llu bytes]\n" CRESET, (void*)buf, (void*)(buf + buf_len), (unsigned long long)buf_len);

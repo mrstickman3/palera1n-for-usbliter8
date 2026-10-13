@@ -47,6 +47,35 @@ int simulator_is_enabled(void)
 
 
 
+/* Simulate checkm8 exploit for A12/A13 devices */
+int simulator_checkm8_exploit(void) {
+    LOG(LOG_INFO, "Simulator: running checkm8 exploit for A12/A13...");
+    if (!simulator_fast) sleep(2);
+    LOG(LOG_INFO, "Simulator: checkm8 exploit succeeded - device in pwned DFU");
+    return 0;
+}
+
+/* Simulate usbliter8 for A12/A13 pwned DFU */
+int simulator_usbliter8(void) {
+    LOG(LOG_INFO, "Simulator: running usbliter8 (iBoot pwn) for A12/A13...");
+    if (!simulator_fast) sleep(3);
+    LOG(LOG_INFO, "Simulator: usbliter8 succeeded - device in pwned DFU");
+    return 0;
+}
+
+/* Simulate A12/A13 DFU mode detection */
+int simulator_detect_dfu_mode(void) {
+    if (sim_mode == SIM_MODE_PWNED_DFU) {
+        LOG(LOG_INFO, "Simulator: A12/A13 device (CPID 0x%04x) detected in pwned DFU mode",
+            sim_device == SIM_DEVICE_A12 ? 0x8000 : 0x8015);
+        return 0;
+    }
+    LOG(LOG_INFO, "Simulator: A12/A13 device (CPID 0x%04x) detected in normal DFU mode",
+        sim_device == SIM_DEVICE_A12 ? 0x8000 : 0x8015);
+    return 1;
+}
+
+
 void *simulator_pongo_helper(void *ptr) {
     (void)ptr;
     LOG(LOG_INFO, "Simulator: waiting for PongoOS...");
@@ -62,7 +91,7 @@ void *simulator_pongo_helper(void *ptr) {
     LOG(LOG_INFO, "Simulator: ramdisk uploaded");
     if (!simulator_fast) sleep(1);
     LOG(LOG_INFO, "Simulator: boot sequence ready");
-    device_has_booted = 1;
+    set_device_has_booted(true);
 
     set_spin(0);
     return NULL;

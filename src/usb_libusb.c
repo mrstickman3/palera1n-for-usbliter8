@@ -153,7 +153,8 @@ static int FoundDevice(libusb_context *ctx, libusb_device *dev, libusb_hotplug_e
         return r;
     }
 
-    stuff->dev = dev;
+    stuff->dev = libusb_ref_device(dev);
+    LOG(LOG_VERBOSE, "DEBUG: Pongo device reference acquired");
     stuff->handle = handle;
     io_start(stuff);
 
@@ -171,7 +172,6 @@ static int LostDevice(libusb_context *ctx, libusb_device *dev, libusb_hotplug_ev
 
     io_stop(stuff);
     libusb_close(stuff->handle);
-    libusb_unref_device(dev);
     stuff->handle = NULL;
     stuff->dev = NULL;
 
@@ -202,6 +202,15 @@ int wait_for_pongo(void)
     if(r != LIBUSB_SUCCESS)
     {
         ERR("libusb_hotplug: %s", libusb_error_name(r));
+        libusb_exit(ctx);
+        return -1;
+    }
+
+    /* Register for device arrival - this is critical to detect PongoOS when it re-enumerates */
+    r = libusb_hotplug_register_callback(ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, 0, PONGO_USB_VENDOR, PONGO_USB_PRODUCT, LIBUSB_HOTPLUG_MATCH_ANY, FoundDevice, &stuff, &hp[0]);
+    if(r != LIBUSB_SUCCESS)
+    {
+        ERR("libusb_hotplug (arrival): %s", libusb_error_name(r));
         libusb_exit(ctx);
         return -1;
     }

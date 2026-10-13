@@ -40,6 +40,7 @@ void tui_jailbreak_status_changed(void) {
 }
 
 static void *tui_jailbreak_thread(void *arg) {
+    (void)arg;
     tui_jailbreak_stage = 1;
     tui_jailbreak_status = "About to execute checkra1n";
 
@@ -56,7 +57,12 @@ static void *tui_jailbreak_thread(void *arg) {
     tui_jailbreak_status = "Running exploit";
     tui_jailbreak_status_changed();
 
-    if (run_device_path(event->device_info); != 0) {
+    struct irecv_device_info info = {0};
+    info.ecid = tui_connected_devices->ecid;
+    info.cpid = tui_connected_devices->cpid;
+    info.bdid = 0; // Will be populated by irecv if needed
+
+    if (run_device_path(&info) != 0) {
         tui_jailbreak_status = "ERROR: Failed to run exploit";
         tui_jailbreak_status_changed();
         pthread_exit(NULL);
@@ -73,29 +79,30 @@ static void *tui_jailbreak_thread(void *arg) {
     // pongo helper will take care of the rest
 
     pthread_exit(NULL);
+    return NULL;
 }
 
 void tui_jailbreak(void) {
     tui_is_jailbreaking = true;
     if (tui_options_verbose_boot) {
-        palerain_flags |= palerain_option_verbose_boot;
+        PALERAIN_OPTION_SET(palerain_flags, palerain_option_verbose_boot);
     } else {
-        palerain_flags &= ~palerain_option_verbose_boot;
+        PALERAIN_OPTION_CLEAR(palerain_flags, palerain_option_verbose_boot);
     }
 
     if (tui_options_safe_mode) {
-        palerain_flags |= palerain_option_safemode;
+        PALERAIN_OPTION_SET(palerain_flags, palerain_option_safemode);
     } else {
-        palerain_flags &= ~palerain_option_safemode;
+        PALERAIN_OPTION_CLEAR(palerain_flags, palerain_option_safemode);
     }
 
     if (tui_options_force_revert) {
-        palerain_flags |= palerain_option_force_revert;
+        PALERAIN_OPTION_SET(palerain_flags, palerain_option_force_revert);
     } else {
-        palerain_flags &= ~palerain_option_force_revert;
+        PALERAIN_OPTION_CLEAR(palerain_flags, palerain_option_force_revert);
     }
 
-    snprintf(palerain_flags_cmd, 0x30, "palera1n_flags 0x%" PRIx64, palerain_flags);
+    snprintf(palerain_flags_cmd, sizeof(palerain_flags_cmd), "palera1n_flags 0x%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "%016" PRIx64, palerain_flags[4], palerain_flags[3], palerain_flags[2], palerain_flags[1], palerain_flags[0]);
     snprintf(xargs_cmd, sizeof(xargs_cmd), "xargs %s", tui_options_boot_args);
 
     pthread_create(&tui_jailbreak_thread_id, NULL, tui_jailbreak_thread, NULL);
