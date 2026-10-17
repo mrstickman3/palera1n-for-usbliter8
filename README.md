@@ -16,7 +16,7 @@ At this stage, testing has only confirmed that the tool launches successfully. T
 
 ## Device Support
 
-| iPhone(s) | iPad(s) | Apple TV(s) |
+| iPhones | iPads | Apple TV |
 | --- | --- | --- |
 | iPhone XS | iPad Air (3rd generation) | Apple TV 4K (2nd generation) |
 | iPhone XS Max | iPad mini (5th generation) | |
