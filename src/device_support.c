@@ -18,6 +18,8 @@ bool is_a12_a13(struct irecv_device_info *info)
         case 0x8001:
         case 0x8003:
         case 0x8020:
+        case 0x8027:
+        case 0x8030:
             return true;
         default:
             return false;

@@ -67,11 +67,11 @@ int simulator_usbliter8(void) {
 int simulator_detect_dfu_mode(void) {
     if (sim_mode == SIM_MODE_PWNED_DFU) {
         LOG(LOG_INFO, "Simulator: A12/A13 device (CPID 0x%04x) detected in pwned DFU mode",
-            sim_device == SIM_DEVICE_A12 ? 0x8000 : 0x8015);
+            sim_device == SIM_DEVICE_A12 ? 0x8020 : 0x8030);
         return 0;
     }
     LOG(LOG_INFO, "Simulator: A12/A13 device (CPID 0x%04x) detected in normal DFU mode",
-        sim_device == SIM_DEVICE_A12 ? 0x8000 : 0x8015);
+        sim_device == SIM_DEVICE_A12 ? 0x8020 : 0x8030);
     return 1;
 }
 
